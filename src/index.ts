@@ -1,32 +1,68 @@
-import { Article } from "./creation_method";
+// FACTORY METHOD PATTERN
 
-enum ArticleType {
-
-    Base,
-    MemberOnly,
-    Premium
+class Person {
 
 }
 
+class Employee {
+    
+    floors:number[] = [1, 3, 4];
 
-class ArticleFactory {
-
-    public static create( $type?:ArticleType ){
-
-        switch( $type ){
-            case ArticleType.Base: return new Article({});
-            case ArticleType.MemberOnly: return new Article({ isMemberOnly: true });
-            case ArticleType.Premium: return new Article({ isMemberOnly: true, isPremium: true });
-            default: throw new Error("Sorry, That doesn't exist");
-        }
+    constructor( person:Person ){
 
     }
 
 }
 
-const article = ArticleFactory.create( ArticleType.MemberOnly );
-const article2 = ArticleFactory.create( ArticleType.Base );
-const article3 = ArticleFactory.create( ArticleType.Premium );
-const article4 = new Article({ isPremium:true });
+class Programmer extends Employee {
+
+}
+
+class Accountant extends Employee {
+
+}
+
+abstract class Department {
+
+    floors:number[];
+    
+    public abstract hire( person:Person ): Employee;
+
+}
+
+class ITDepartment extends Department {
+
+    floors:number[] = [1, 3, 4];
+
+    public hire( person:Person ): Programmer {
+        const programmer = new Programmer( person );
+        programmer.floors = this.floors;
+        return programmer;
+    }
+
+}
+
+class AccountingDepartment extends Department {
+
+    floors:number[] = [1, 3, 7];
+    
+    public hire( person:Person ): Accountant {
+        return new Accountant( person );
+    }
+
+}
 
 
+// setup
+const itDep = new ITDepartment();
+const accDep = new AccountingDepartment();
+
+// applicants
+const joe = new Person();
+const gerry = new Person();
+const sarah = new Person();
+const janice = new Person();
+
+//hire
+itDep.hire(sarah);
+accDep.hire(joe);
