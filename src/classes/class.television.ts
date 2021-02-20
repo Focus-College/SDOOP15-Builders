@@ -6,4 +6,8 @@ export class Television {
 
     screenSize:number;
 
+    model:string;
+
+    serialNumber:string;
+
 }

@@ -4,6 +4,8 @@ import { withSpeakers } from './classes/mixin.withSpeakers';
 import { with1080P } from "./classes/mixin.with1080P";
 import { with4k } from "./classes/mixin.with4K";
 import { setMaxListeners } from "process";
+import { dir } from "console";
+import { v4 } from 'uuid';
 
 enum Resolutions {
 
@@ -78,6 +80,14 @@ class TelevisionBuilder {
 
     }
 
+    setModel( name:string ){
+        this.instance.model = name;
+    }
+
+    setSerialNumber(){
+        this.instance.serialNumber = v4();
+    }
+
     // return the result
 
     getProduct(){
@@ -88,14 +98,63 @@ class TelevisionBuilder {
 
 }
 
+class TelevisionDirector {
+
+    constructor( public builder:typeof TelevisionBuilder ){
+
+        
+
+    }
+
+    private samsungWith4kWifiAndSpeakers(){
+
+        const builder = new this.builder();
+        builder.addWifi([ WifiFreq.B, WifiFreq.G, WifiFreq.N, WifiFreq.AC ]);
+        builder.addSpeakers();
+        builder.setResolution( Resolutions.k4 );
+        builder.setBrandName("Samsung");
+        return builder;
+
+    }
+
+    private samsungGalaxy(){
+
+        const builder = this.samsungWith4kWifiAndSpeakers()
+        builder.setModel("Galaxy");
+        return builder;
+
+    }
+
+    samsungGalaxy48(){
+
+        const builder = this.samsungGalaxy();
+        builder.setSize( 48 );
+        builder.setSerialNumber();
+        return builder;
+
+    }
+
+    samsungGalaxy32(){
+
+        const builder = this.samsungGalaxy();
+        builder.setSize( 32 );
+        builder.setSerialNumber();
+        return builder;
+
+    }
+
+}
+
+const director = new TelevisionDirector( TelevisionBuilder );
+
+// get product directly
+const samsungGalaxy48 = director.samsungGalaxy48().getProduct();
+
+// get builder, use builder to get product
+const samsungGalaxy32Builder = director.samsungGalaxy32();
+const samsungGalaxy32 = samsungGalaxy32Builder.getProduct();
+
+
+
 // create a 4k tv with wifi
-const builder = new TelevisionBuilder();
-builder.addWifi([ WifiFreq.B, WifiFreq.G, WifiFreq.N ]);
-builder.addSpeakers();
-builder.setResolution( Resolutions.k4 );
-builder.setSize( 48 );
-builder.setBrandName("Samsung");
-
-const samsungWith4kWifiAndSpeakers = builder.getProduct();
-
-console.log( samsungWith4kWifiAndSpeakers );
+console.log( samsungGalaxy48, samsungGalaxy32 );
