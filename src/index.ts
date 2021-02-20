@@ -1,78 +1,101 @@
+import { Television } from "./classes/class.television"
+import { IWithWifi, WifiFreq, withWifi } from "./classes/mixin.withWifi"
+import { withSpeakers } from './classes/mixin.withSpeakers';
+import { with1080P } from "./classes/mixin.with1080P";
+import { with4k } from "./classes/mixin.with4K";
+import { setMaxListeners } from "process";
 
-const MongoClient = require('mongodb').MongoClient;
-const uri = "mongodb+srv://<username>:<password>@operatingdatastorage.byj0b.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
+enum Resolutions {
 
-class MongoConnection {
+    i480 = '480i',
+    p1080 = '1080p',
+    k4 = '4k'
 
-    private static instance:MongoConnection|null;
+}
+
+
+
+class TelevisionBuilder {
+
+    BaseTelevision = Television;
+
+    private wifiFreq:WifiFreq[] = [];
     
-    private _client:any;
+    // instance logic
     
-    public getClient():Promise<any>{
-        return new Promise((resolve, reject) => {
+    private _instance:Television;
 
-            this._client.connect(( err:any ) => {
-                
-                if( err ){
-                    reject(err);
-                } else {
-                    resolve(this._client);
-                }
-                
-            });
+    protected get instance():Television {
+        
+        if( !this._instance ){
+            
+            this._instance = new this.BaseTelevision();
 
-        });
-    };
+            if( this.wifiFreq.length ){
+                (this._instance as Television & IWithWifi).wifiFrequencies = this.wifiFreq;
+            }
 
-    constructor(){
-
-        if( MongoConnection.instance ){
-            return MongoConnection.instance;
         }
 
-        else {
-            this._client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-            MongoConnection.instance = this;
+        return this._instance;
+    }
 
-            this._client.on('close', () => {
-                MongoConnection.instance = null;
-            })
+    // pre instance methods
+
+    addWifi( freq?:WifiFreq[] ){
+
+        this.BaseTelevision = withWifi( this.BaseTelevision );
+        this.wifiFreq = freq;
+
+    }
+
+    addSpeakers(){
+
+        this.BaseTelevision = withSpeakers( this.BaseTelevision )
+
+    }
+
+    setResolution( resolution:Resolutions ){
+
+        switch( resolution ){
+            case Resolutions.p1080: this.BaseTelevision = with1080P( this.BaseTelevision ); break;
+            case Resolutions.k4: this.BaseTelevision = with4k( this.BaseTelevision ); break;
         }
 
     }
 
-}
+    // post instance methods
 
-class Person {
+    setBrandName( brand:string ){
 
-    static async loadById( id:string ){
-
-        const connection = new MongoConnection();
-        const client = await connection.getClient();
-        const person = await client.collection('people').findById( id );
-        return new Person( person );
+        this.instance.brand = brand;
 
     }
 
-    constructor( person:any ){
+    setSize( size:number ){
+
+        this.instance.screenSize = size;
 
     }
 
-}
+    // return the result
 
-class Organization {
+    getProduct(){
 
-    static async loadById( id:string ){
-
-        const connection = new MongoConnection();
-        const client = await connection.getClient();
-        const org = await client.collection('people').findById( id );
-        return new Organization( org );
-
-    }
-
-    constructor( org:any ){
+        return this.instance;
 
     }
 
 }
+
+// create a 4k tv with wifi
+const builder = new TelevisionBuilder();
+builder.addWifi([ WifiFreq.B, WifiFreq.G, WifiFreq.N ]);
+builder.addSpeakers();
+builder.setResolution( Resolutions.k4 );
+builder.setSize( 48 );
+builder.setBrandName("Samsung");
+
+const samsungWith4kWifiAndSpeakers = builder.getProduct();
+
+console.log( samsungWith4kWifiAndSpeakers );
